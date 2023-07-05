@@ -1,0 +1,56 @@
+.book-container {
+    height: 100vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(0,0,0,0.8);
+}
+
+.book {
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    -moz-transform-style: preserve-3d;
+    -webkit-perspective: 200vw;
+    -moz-perspective: 200vw;
+    perspective: 200vw;
+    position: relative;
+    height: 80vh;
+    transform-origin: left center;
+}
+
+.front,
+.back {
+  transform-style: preserve-3d;
+  position: absolute;
+  width: 35vw;
+  height: 100%;
+  top: 0;
+  left: 0;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  transform-origin: left center;
+  border: 1px solid rgba(0, 0, 0);
+}
+
+.back,.front {
+    background-color: rgb(255,255,255);
+}
+
+.front {
+    border-top-right-radius: 1%; 
+    border-bottom-right-radius: 1%;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+}
+
+.front::before {
+    content: "";
+    position: absolute;
+    width: 2%; /* Adjust as per your requirement */
+    height: 100%;
+    left: 0;
+    background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(211,211,211,0.8) 35%, rgba(169,169,169,0.4) 100%);
+    box-shadow: inset 0 0 5px rgba(0,0,0,.5);
+    z-index: 1;
+  }
+  
