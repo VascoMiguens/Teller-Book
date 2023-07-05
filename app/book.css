@@ -28,20 +28,20 @@
   height: 100%;
   top: 0;
   left: 0;
-  border: 1px solid rgba(0, 0, 0, 0.2);
   transform-origin: left center;
-  border: 1px solid rgba(0, 0, 0);
 }
 
 .back,.front {
-    background-color: rgb(255,255,255);
+    background-color: rgb(211,211,211);
 }
 
 .front {
+    transform: rotateY(-180deg);
     border-top-right-radius: 1%; 
     border-bottom-right-radius: 1%;
-    box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
 }
+
+
 
 .front::before {
     content: "";
@@ -49,8 +49,79 @@
     width: 2%; /* Adjust as per your requirement */
     height: 100%;
     left: 0;
-    background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(211,211,211,0.8) 35%, rgba(169,169,169,0.4) 100%);
-    box-shadow: inset 0 0 5px rgba(0,0,0,.5);
+    background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(211,211,211,0.8) 35%, rgba(200,200,200, 0.6) 70% rgba(169,169,169,0.4) 100%);
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.6);
     z-index: 1;
+}
+
+.back::before {
+    content: "";
+    position: absolute;
+    width: 2%; /* Adjust as per your requirement */
+    height: 100%;
+    left: 0;
+    background: linear-gradient(270deg, rgba(255,255,255,1) 0%, rgba(211,211,211,0.8) 35%, rgba(200,200,200, 0.6) 70% rgba(169,169,169,0.4) 100%);
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.6);
+    z-index: 1;
+}
+
+.front-side,
+.back-side {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  backface-visibility: hidden;
+}
+
+/* Front Cover Cloth Covering */
+.front .back-side {
+    transform: rotateY(180deg);
+    background-image: linear-gradient(0deg, rgba(211,211,211) 25%, rgba(211,211,211) 50%, rgba(211,211,211) 75%), 
+                      linear-gradient(0deg, rgba(211,211,211) 25%, rgba(211,211,211) 50%, rgba(211,211,211) 75%), 
+                      linear-gradient(0deg, rgba(211,211,211) 25%, rgba(211,211,211) 50%, rgba(211,211,211) 75%); 
+    background-size: 100% 2vh, 
+                     1vw 100%, 
+                     100% 2vh; 
+    background-position: top,
+                         left,
+                         bottom;
+    background-repeat: no-repeat;
+    background-color: rgb(255,255,255);
   }
+
+.front .back-side::before {
+    content: "";
+    position: absolute;
+    width: 2%; 
+    height: 100%;
+    right: 0;
+    background-color: rgb(255,255,255);
+}
+  
+/* Back Cover Cloth Covering */
+.back .back-side {
+    background-image: linear-gradient(180deg, rgba(211,211,211) 25%, rgba(211,211,211) 50%, rgba(211,211,211) 75%), 
+                      linear-gradient(180deg, rgba(211,211,211) 25%, rgba(211,211,211) 50%, rgba(211,211,211) 75%), 
+                      linear-gradient(180deg, rgba(211,211,211) 25%, rgba(211,211,211) 50%, rgba(211,211,211) 75%); 
+    background-size: 100% 2vh, 
+                     1vw 100%, 
+                     100% 2vh; 
+    background-position: top,
+                         right,
+                         bottom;
+    background-repeat: no-repeat;
+    background-color: rgb(255,255,255);
+}
+
+
+.back .back-side::before {
+    content: "";
+    position: absolute;
+    width: 2%; 
+    height: 100%;
+    left: 0;
+    background-color: rgb(255,255,255);
+}
   
