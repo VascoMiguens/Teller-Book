@@ -16,7 +16,7 @@
     -moz-perspective: 200vw;
     perspective: 200vw;
     position: relative;
-    height: 80vh;
+    height: 90vh;
     transform-origin: left center;
 }
 
@@ -24,24 +24,32 @@
 .back {
   transform-style: preserve-3d;
   position: absolute;
-  width: 35vw;
+  width: 40vw;
   height: 100%;
   top: 0;
   left: 0;
   transform-origin: left center;
 }
 
+.page1 {
+  transform-style: preserve-3d;
+  position: absolute;
+  width: 39vw;
+  height: 95%;
+  top: 2.5%;
+  left: 0;
+  transform-origin: left center;
+}
+
+
 .back,.front {
     background-color: rgb(211,211,211);
 }
 
 .front {
-    transform: rotateY(-180deg);
     border-top-right-radius: 1%; 
     border-bottom-right-radius: 1%;
 }
-
-
 
 .front::before {
     content: "";
@@ -54,16 +62,6 @@
     z-index: 1;
 }
 
-.back::before {
-    content: "";
-    position: absolute;
-    width: 2%; /* Adjust as per your requirement */
-    height: 100%;
-    left: 0;
-    background: linear-gradient(270deg, rgba(255,255,255,1) 0%, rgba(211,211,211,0.8) 35%, rgba(200,200,200, 0.6) 70% rgba(169,169,169,0.4) 100%);
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.6);
-    z-index: 1;
-}
 
 .front-side,
 .back-side {
@@ -99,7 +97,7 @@
     right: 0;
     background-color: rgb(255,255,255);
 }
-  
+
 /* Back Cover Cloth Covering */
 .back .back-side {
     background-image: linear-gradient(180deg, rgba(211,211,211) 25%, rgba(211,211,211) 50%, rgba(211,211,211) 75%), 
@@ -116,12 +114,4 @@
 }
 
 
-.back .back-side::before {
-    content: "";
-    position: absolute;
-    width: 2%; 
-    height: 100%;
-    left: 0;
-    background-color: rgb(255,255,255);
-}
   
