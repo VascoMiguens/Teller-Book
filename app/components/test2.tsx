@@ -3,7 +3,6 @@ import * as THREE from "three";
 
 const Book: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const bookRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Create scene, camera, and renderer
@@ -14,64 +13,99 @@ const Book: React.FC = () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     // Add the renderer to the DOM
-    if (bookRef.current) {
-        if(containerRef.current) {
-            containerRef.current.appendChild(bookRef.current);
-            bookRef.current.appendChild(renderer.domElement);
-        }
+    if (containerRef.current) {
+      containerRef.current.appendChild(renderer.domElement);
     }
 
-    //Ambient
+    // Ambient
     const ambient = new THREE.AmbientLight(0x222222);
     scene.add(ambient);
 
-    //Light
+    // Light
     const light = new THREE.DirectionalLight(0xffffff);
-    light.position.set(0, 0, 6);
+    light.position.set(10, 10, 10);
     scene.add(light);
 
     // Add shapes
-    const geometry = new THREE.BoxGeometry(6.5, 8, 0.1);
-    const material = new THREE.MeshLambertMaterial({ color: 0x2727e6 });
-    const cover = new THREE.Mesh(geometry, material);
-    const cover2 = new THREE.Mesh(geometry, material);
+    const coverGeometry = new THREE.BoxGeometry(6.5, 8, 0.1);
+    const pageGeometry = new THREE.BoxGeometry(6.4, 7.8, 0.2);
+    const coverMaterial = new THREE.MeshLambertMaterial({ color: 0x2727e6 });
 
+    //First cover
+    const cover = new THREE.Mesh(coverGeometry, coverMaterial);
     const pivot = new THREE.Object3D();
     pivot.position.x = -3.25;
+    pivot.position.z = 0.5;
     cover.position.x = 3.25;
     pivot.add(cover);
+    scene.add(pivot);
 
+    //Spine
+    const spine = new THREE.Mesh(new THREE.BoxGeometry(0.5, 8, 0.1), new THREE.MeshLambertMaterial({ color: 0x2727e6 }));
+    spine.rotation.y = Math.PI / 2;
+
+    // Create a pivot for the spine
+    const pivotSpine = new THREE.Object3D();
+    pivotSpine.position.x = -3.25;
+    pivotSpine.position.z = 0;
+    spine.position.x = 0;
+    spine.position.z = 0.25
+    pivotSpine.add(spine);
+    scene.add(pivotSpine);
+
+    // Second cover
+    const cover2 = new THREE.Mesh(coverGeometry, coverMaterial);
     const pivot2 = new THREE.Object3D();
-    cover.position.x = 0;
+    cover2.position.x = 0;
+    cover2.position.z = 0;
     pivot2.add(cover2);
-
-    scene.add(pivot, pivot2);
+    scene.add(pivot2);
 
     camera.position.z = 6;
+    // camera.position.x = -3;
+    // camera.position.y = -10;
+    // camera.rotateX(1.2);
 
-    // Animate the scene
+    // Animation
     const animate = function () {
       requestAnimationFrame(animate);
+      if (!containerRef.current) return;
 
-      const scrollProgress = Math.min(window.scrollY / 3000, 1);
-      const bookTimeline = Math.min(scrollProgress * 2, 1);
-      const pageTimeline = Math.max(scrollProgress * 2 - 1, 0);
-      const rotationY = Math.PI * pageTimeline; // Increase rotation to simulate opening
+      const containerHeight = containerRef.current.clientHeight;
+      const containerTop = containerRef.current.getBoundingClientRect().top;
+      const scrollY = window.scrollY || window.pageYOffset;
 
-      scene.position.x = bookTimeline * 3.25; // Move the scene to the right
-      pivot.rotation.y = -rotationY; // Rotate the left page
+      // Calculate scroll progress
+      const progress = Math.min((scrollY + containerTop) / (containerHeight - window.innerHeight), 1);
+      spine.rotation.y = Math.PI / 2;
+      // Calculate rotations
+      const rotationYCover = Math.min(Math.PI * (progress / 0.1), Math.PI);
+      
+      // Cover rotation and position
+      pivot.rotation.y = -rotationYCover;
+      scene.position.x = rotationYCover * 3.25 / Math.PI;
 
+      if (rotationYCover >= Math.PI / 2 && rotationYCover <= Math.PI) {
+        // Calculate the progress after the cover reaches 90 degrees
+        const after90Progress = (rotationYCover - Math.PI / 2) / (Math.PI / 2);
+        
+        pivotSpine.rotation.y = -after90Progress * Math.PI / 2;
+        // Adjust the spine and cover's position so the cover is after the spine
+        pivot.position.x = -3.25 - 0.5 * after90Progress;
+        
+        // Move the cover and spine along z-axis based on progress
+        const zPositionCover = 0.5 - 0.5 * after90Progress;
+        pivot.position.z = zPositionCover;
+
+       
+      }
       renderer.render(scene, camera);
     };
-
+    
     animate();
   }, []);
 
-  return (
-    <div className="container" ref={containerRef}>
-      <div className="book" ref={bookRef} style={{position: "fixed", top: "0", left: "0", minHeight: "calc(3000px + 100vh)"}}></div>
-    </div>
-  );
+  return <div className="container" ref={containerRef} style={{ position: "fixed", top: "0", left: "0", height: "1000vh" }} />;
 };
 
 export default Book;
