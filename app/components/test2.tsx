@@ -35,16 +35,27 @@ const Book: React.FC = () => {
       };
 
       const handlePreviousPage = () => {
-        if (currentPage.current > 0) {
+        if (currentPage.current === 1) {
+          // Close the book cover if we're at the first page
+          currentPage.current--;
+        } else if (currentPage.current > 0) {
+          // Revert one page on each subsequent click
           currentPage.current--;
         }
       };
-  
+      
+    
+
       const handleNextPage = () => {
-        if (currentPage.current < pages.length) {
+        if (currentPage.current === 0) {
+          // Open the book cover on the first click
+          currentPage.current++;
+        } else if (currentPage.current < pagePivots.length + 1) { // Add 1 to account for the last page
+          // Turn one page on each subsequent click
           currentPage.current++;
         }
       };
+      
       
 
       const prevArrow = containerRef.current.querySelector('.prev-arrow');
@@ -80,9 +91,9 @@ const Book: React.FC = () => {
   function initializeCamera(): THREE.PerspectiveCamera {
     const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, 1000);
     camera.position.z = 15;
-    //  camera.position.x = -3;
-    //     camera.position.y = -15;
-    //     camera.rotateX(1.2)
+    // camera.position.x = -3;
+    // camera.position.y = -15;
+    // camera.rotateX(1.2)
     return camera;
   }
 
@@ -92,9 +103,12 @@ const Book: React.FC = () => {
     container.appendChild(renderer.domElement);
     return renderer;
   }
+
+
+  
+
   function initializeBook(scene: THREE.Scene): [THREE.Object3D, THREE.Object3D, THREE.Mesh,THREE.Object3D[], THREE.Object3D[]] {
     const coverGeometry = new THREE.BoxGeometry(6.5, 8, 0.1);
-    const pageGeometry = new THREE.BoxGeometry(6.4, 7.8, 0.2);
     const coverMaterial = new THREE.MeshLambertMaterial({ color: 0x2727e6 });
 
     //First cover
@@ -122,33 +136,32 @@ const Book: React.FC = () => {
     //Pages
     const vertexShader = `
       varying vec2 vUv;
-      uniform float bendAngle;
-      uniform float flipProgress;
-      varying vec2 vUvVid;
-
+      uniform float peelProgress;  // 0.0 to 1.0 - 0.0 is unpeeled, 1.0 is fully peeled
+      uniform float curlStrength; // 0.0 to 1.0
       void main() {
         vUv = uv;
         vec3 pos = position;
-        
-        // Use a power function to achieve a non-linear bending effect
-        if (pos.x > -3.5) {
-          float normalized = (pos.x - (-3.5)) / 5.0; // adjust denominator based on the width of the page
-          pos.z += -pow(normalized, 2.0) * bendAngle; // increase the power to make the bend more pronounced
-        }
-        
-         gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
 
-        // Pass the texture coordinates to the fragment shader for the video texture
-        vUvVid = uv;
+        float normalizedX = -(pos.x - 3.25) / 6.5;
+        
+        if (normalizedX < 0.7 ) {
+          float quadraticValue = (normalizedX - 0.7) * (normalizedX - 0.7) * 4.0;
+          pos.z += quadraticValue * curlStrength * (1.0 - peelProgress);  // Adjust curlStrength and peelProgress to control the peel effect
+        }
+
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
       }
     `;
 
+
+
+  
     const fragmentShader = `
             uniform vec3 color;
             uniform sampler2D frontTexture;
             uniform sampler2D backTexture;
             uniform int useTexture;
-            
             varying vec2 vUv;
             
             void main() {
@@ -174,15 +187,15 @@ const Book: React.FC = () => {
     const pages: THREE.Object3D[] = [];
     const pagePivots: THREE.Object3D[] = [];
  
-    for (let i = 4; i >= 0; i--) {
+    for (let i = 0; i <= 4; i++) {
       const pageGeometry = new THREE.PlaneGeometry(6.4, 7.8, 50, 50);
       const pageUniform = {
         useTexture: {value: i ===0 ? 1 : 0},
-        bendAngle: { value: 0},
-        flipProgress: { value: 0},
         color: { value: new THREE.Color(`hsl(${i * 60}, 100%, 50%)`) },
-        scrollProgress: { value: 0 },  // Add a new uniform for scroll progress
-      };  
+        peelProgress: { value: 0.0 },
+        curlStrength: { value: 0.0},
+      };
+      
       const pageMaterial = new THREE.ShaderMaterial({
         uniforms: pageUniform,
         vertexShader: vertexShader,
@@ -193,9 +206,8 @@ const Book: React.FC = () => {
    
       // Create a pivot for each page at the left edge
       const pivotPage = new THREE.Object3D();
-      page.position.x = 3.15;
-      pivotPage.position.z = 0.1;
-      page.position.z = 0.01 * (4 - i); // Adjust z-position calculation
+      page.position.set(3.2, 0,(0.01 * (4 - i)));
+      pivotPage.position.set(0, 0, 0.1);
       pivotPage.add(page);
       pages.push(page);
       pagePivots.push(pivotPage); // Store the pivot
@@ -224,7 +236,30 @@ const Book: React.FC = () => {
     pages: THREE.Object3D[], 
     pagePivots: THREE.Object3D[]) {
     if (!containerRef.current) return;
+    
 
+    // Logic for closing the book cover
+    if (currentPage.current === 0) {
+      if (pivot.rotation.y < 0) {
+          pivot.rotation.y += 0.05;
+          
+          // Adjust the cover's z and x position to revert back to original position
+          pivot.position.z += 0.008;
+          pivot.position.x += 0.008;
+          // spine.position.x += 0.004;
+          // spine.position.z += 0.004;
+          // scene.position.x -= 0.055;
+      } else {
+          pivot.rotation.y = 0;
+      }
+
+      // Revert spine rotation to original
+      if (pivot.rotation.y >= -Math.PI / 2) {
+          spine.rotation.y = (Math.PI + pivot.rotation.y) * 0.5; 
+      }
+    }
+
+    // Logic for opening the book cover
     if (currentPage.current === 1) {
       if (pivot.rotation.y > -Math.PI) {
           pivot.rotation.y -= 0.05;
@@ -232,23 +267,51 @@ const Book: React.FC = () => {
           // Adjust the cover's z position to make it look realistic
           pivot.position.z -= 0.008;
           pivot.position.x -= 0.008;
+          // Adjust the spine's x and z position to make it sync with the cover
           spine.position.x -= 0.004;
           spine.position.z -= 0.004;
+          // Adjust the scene's x position to make center the book in the scene
           scene.position.x += 0.055;
+          
       } else {
           pivot.rotation.y = -Math.PI;
+          const lastPageIndex = pagePivots.length - 1;
+          // Get the position of the last page to use a reference
+          const referencePositionX = pagePivots[lastPageIndex].position.x; 
+          pagePivots.forEach((pagePivot, index) => {
+              // Check if it's not the last page
+              if (index !== lastPageIndex) {
+                  // Define the offset based on the page position in the stack
+                  const offset = 0.009 * (lastPageIndex - index); 
+                  pagePivot.position.x = referencePositionX - offset;
+              }
+          });
       }
   
       // Start rotating spine once cover is at 90 degrees (-PI/2)
       if (pivot.rotation.y <= -Math.PI / 2) {
           spine.rotation.y = (Math.PI + pivot.rotation.y) * 0.5; 
       }
-  }
-  
-  
+    }
+
+    
+
+    for (let i = 0; i < pagePivots.length; i++) {
+      const pagePivot = pagePivots[i];
+      const shaderMaterial = (pagePivot.children[0] as THREE.Mesh).material as THREE.ShaderMaterial;
+      if (i < currentPage.current - 1) {
+        if (shaderMaterial.uniforms.curlStrength.value <= 0.7) {
+          shaderMaterial.uniforms.peelProgress.value += 0.02;  // Example value, adjust as needed
+          shaderMaterial.uniforms.curlStrength.value += 0.02;
+        } else if ( pagePivot.rotation.y > -Math.PI) {
+          // Start rotating the page once the peeling effect is complete
+          pagePivot.rotation.y -= 0.01;
+        }
+        shaderMaterial.needsUpdate = true;
+      }
+    }
     
   }
-
 
 
 
